@@ -9,7 +9,8 @@
 set -euo pipefail
 
 INPUT="${1:?請提供音檔/影片路徑（.mp4/.m4a/.wav/.mp3…）}"
-LANG="${2:-zh}"
+# 注意：變數名不可用 LANG（那是系統 locale 環境變數，覆蓋會破壞 UTF-8 處理）
+WHISPER_LANG="${2:-zh}"
 PROMPT="${3:-}"
 OUTDIR="${4:-$(dirname "$INPUT")/transcribe_out}"
 
@@ -44,12 +45,12 @@ echo "   $MEAN"
 echo "   （mean_volume 很低≈靜音 → 左右聲道幾乎相同＝混音 mono，無法機器分軌，說話人需靠內容判讀）"
 
 # --- (2) 轉錄 ---
-echo "▶ 開始轉錄（model=turbo, lang=$LANG）首次會下載模型(~1.5GB)..."
+echo "▶ 開始轉錄（model=turbo, lang=$WHISPER_LANG）首次會下載模型(~1.5GB)..."
 if [ -n "$PROMPT" ]; then
-  "$WHISPER" "$INPUT" --language "$LANG" --model turbo --output_format all \
+  "$WHISPER" "$INPUT" --language "$WHISPER_LANG" --model turbo --output_format all \
     --initial_prompt "$PROMPT" --output_dir "$OUTDIR" --verbose False
 else
-  "$WHISPER" "$INPUT" --language "$LANG" --model turbo --output_format all \
+  "$WHISPER" "$INPUT" --language "$WHISPER_LANG" --model turbo --output_format all \
     --output_dir "$OUTDIR" --verbose False
 fi
 
