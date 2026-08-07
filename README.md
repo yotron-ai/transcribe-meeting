@@ -1,51 +1,61 @@
-# transcribe-meeting
+# transcribe-meeting — 交接安裝說明（給同事）
 
-A **Claude Code skill** that turns meeting recordings/videos into transcripts using **local Whisper** — no upload, no API key, audio never leaves your machine.
+把「會議錄音 → 逐字稿」做成 Claude Code 技能。裝好後，只要在 Claude Code 裡說「幫我把這個錄音轉逐字稿」，Claude 就會自動處理。全程本機執行，音檔不外傳、不需 API 金鑰。
 
-會議錄音/錄影 → 逐字稿的 Claude Code 技能。本機 Whisper turbo，音檔不外傳、免 API 金鑰。裝好後在 Claude Code 說「幫我把這個錄音轉逐字稿」即可。
+## 安裝（三步）
 
----
+1. **放入技能資料夾**
+   把整個 `transcribe-meeting/` 資料夾複製到：
+   - 個人（所有專案都能用）：`~/.claude/skills/transcribe-meeting/`
+   - 或某專案共用（隨 git repo 分享）：`<專案>/.claude/skills/transcribe-meeting/`
 
-## 安裝 Install
+2. **裝 ffmpeg（一次性）**
+   ```bash
+   brew install ffmpeg
+   ```
+   轉錄引擎與 OpenCC（自動轉繁用）都不用手動裝，首次執行時腳本會自動備妥（會下載模型 ~1.5GB）。
 
-直接 clone 進 Claude Code 的技能資料夾：
+3. **開 Claude Code 直接用**
+   對 Claude 說：「幫我把 `會議.mp4` 轉成逐字稿」即可。
 
+## 兩種引擎
+
+| 引擎 | 條件 | 速度（25.9 分鐘會議實測）|
+|------|------|------|
+| `mlx`（預設）| Apple Silicon (M 系列) | **2 分 48 秒** |
+| `cpu`（fallback）| 任何機器 | 約 35 分鐘 |
+
+非 Apple Silicon 的機器會**自動退回 `cpu`**，不需要任何設定，只是慢很多。
+
+兩種引擎都會**自動用 OpenCC `s2tw` 統一轉成繁體（台灣標準字形）**——Whisper 本身會漏簡體字，實測 0.5–3%。注意 `s2tw` 會把「台灣」正規化成「臺灣」。不想轉就設 `TO_TRADITIONAL=0`，想換設定用 `OPENCC_CONFIG`。
+
+## 手動也能跑（不透過 Claude）
 ```bash
-# 個人（所有專案可用）
-git clone https://github.com/roy6732856/transcribe-meeting ~/.claude/skills/transcribe-meeting
+S=~/.claude/skills/transcribe-meeting/transcribe.sh
 
-# 一次性依賴（macOS）
-brew install ffmpeg
+# 一般用法（預設 mlx）
+bash "$S" "會議.mp4" zh "參與者有 A 與 B"
+
+# 指定輸出資料夾
+bash "$S" "會議.mp4" zh "參與者有 A 與 B" ./out
+
+# 兩引擎並排比較（想確認品質沒退化時）
+bash "$S" "會議.mp4" zh "參與者有 A 與 B" ./out both
+
+# 強制用舊的 CPU 引擎
+bash "$S" "會議.mp4" zh "參與者有 A 與 B" ./out cpu
 ```
 
-`openai-whisper` 不用手動裝——首次轉錄時腳本會自動 `pip install --user`（會下載模型 ~1.5GB）。
+## 需求
+- **macOS**（Apple Silicon 可用快的 MLX 引擎；Intel Mac 或其他平台自動退回 CPU 引擎）
+- **ffmpeg**
+- **Python 3**。MLX 引擎需要 3.10–3.13 其中一版（依賴 numba，對太新的 Python 還沒 wheel）。腳本會自動挑，找不到就退回 CPU 引擎
+- 有裝 [`uv`](https://github.com/astral-sh/uv) 會讓首次建環境快很多（沒裝也能跑，會改用 `python -m venv`）
+- **硬碟約留 4GB**：MLX 模型 1.5GB + MLX 環境 1GB（`~/.cache/transcribe-meeting/`）+ CPU 版模型 1.5GB（`~/.cache/whisper/`）
 
-## 使用 Usage
-
-**在 Claude Code 裡**（推薦）：
-> 幫我把 `會議.mp4` 轉成逐字稿
-
-Claude 會自動偵測到本技能並執行。
-
-**手動 CLI**：
+## 移除
 ```bash
-bash ~/.claude/skills/transcribe-meeting/transcribe.sh "會議.mp4" zh "參與者有 A 與 B，會談到報價、里程碑"
-# 參數：<輸入檔> [語言=zh] [initial_prompt] [輸出資料夾]
+rm -rf ~/.claude/skills/transcribe-meeting   # 技能本身
+rm -rf ~/.cache/transcribe-meeting           # MLX 環境（下次執行會自動重建）
+rm -rf ~/.cache/whisper                      # CPU 版模型
 ```
-產出 `.txt / .srt / .vtt / .json / .tsv`。
-
-## 特色 Features
-
-- **全本機**：適合客戶敏感會議，音檔不外傳、不需雲端 API。
-- **可攜**：自動偵測/安裝 whisper，不寫死任何個人路徑。
-- **混音 mono 判斷**：先測左右聲道差（`mean_volume`）。接近靜音＝混音 mono、無法機器分軌 → 說話人靠內容判讀。
-- **幻覺提醒**：近靜音段 Whisper 常生幻覺（「尼泊爾」「字幕by…」），交稿前人工掃一遍刪掉。
-
-## 需求 Requirements
-
-- macOS + Python 3（系統內建即可）+ ffmpeg
-- 硬碟約 2GB（Whisper turbo 模型）
-
-## License
-
-MIT

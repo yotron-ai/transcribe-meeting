@@ -1,2 +1,6 @@
 .DS_Store
 transcribe_out/
+
+# 編輯備份
+*.bak
+*.bak-*
