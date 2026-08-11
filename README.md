@@ -1,96 +1,151 @@
-# transcribe-meeting — 本機會議逐字稿
+# transcribe-meeting
 
-把會議錄音或影片轉成 `.txt / .srt / .vtt / .json / .tsv`，可作為 Claude Code skill 使用。音檔與逐字稿都在本機處理，不需要 API 金鑰；但首次使用會下載 Python 套件與模型，這是本機隱私邊界的一部分。
+> 在本機把會議錄音或影片轉成逐字稿；音檔不上傳、不需要雲端 API 金鑰。
 
-## 安裝
+這是一個可安裝為 Claude Code Skill 的本機轉錄工具，支援 Whisper 的 MLX 與 CPU 引擎，並輸出 `.txt`、`.srt`、`.vtt`、`.json`、`.tsv` 五種格式。
 
-把整個 `transcribe-meeting/` 資料夾複製到：
+首次使用仍需要網路下載 Python 套件與 Whisper 模型；「不上傳音檔」不代表完全離線。
 
-- 個人技能：`~/.claude/skills/transcribe-meeting/`
-- 專案共用：`<專案>/.claude/skills/transcribe-meeting/`
+## 功能摘要
 
-安裝 `ffmpeg`（同時提供 `ffprobe`）：
+- Apple Silicon 優先使用 MLX GPU；不支援或準備失敗時明確退回 CPU。
+- `both` 模式可比較 MLX 與 CPU 結果；若 MLX 失敗，不會產生假比較表。
+- 預設使用 OpenCC `s2tw` 將輸出轉為臺灣繁體字形。
+- 轉錄、轉繁與品質稽核完成後才發布正式輸出，避免半成品覆蓋資料。
+- 既有輸出預設不覆蓋；`--overwrite` 會先保留完整備份。
+- 所有測試不需要下載 Whisper、MLX、ffmpeg、網路或大型媒體檔。
+
+## 快速開始
+
+### 1. 安裝前置工具
+
+macOS：
 
 ```bash
 brew install ffmpeg
 ```
 
-Python 3.10–3.13 至少需要其中一版。`uv` 是可選的；有它會加快建立 venv，沒有也會使用 `python -m venv` 與該環境自己的 pip。
+需要 Python 3.10–3.13；安裝 `uv` 可加快建立虛擬環境，但不是必要條件。
 
-## 手動使用
+### 2. 安裝 Claude Code Skill
 
-先看完整說明，這條路徑不會初始化任何轉錄引擎：
+將整個 repo 複製到以下其中一個位置：
+
+```text
+個人使用：~/.claude/skills/transcribe-meeting/
+專案共用：<專案>/.claude/skills/transcribe-meeting/
+```
+
+### 3. 先查看 CLI 說明
 
 ```bash
 bash transcribe.sh --help
 ```
 
-既有 positional 參數順序保持不變：
+### 4. 執行轉錄
 
 ```bash
 S=~/.claude/skills/transcribe-meeting/transcribe.sh
 
-# 預設 mlx；輸出預設為輸入檔旁的 transcribe_out/
+# 使用預設 MLX；輸出到輸入檔旁的 transcribe_out/
 bash "$S" "會議.mp4" zh "參與者有 A 與 B"
 
-# 指定輸出與 CPU 引擎
+# 指定輸出資料夾與 CPU 引擎
 bash "$S" "會議.mp4" zh "參與者有 A 與 B" ./out cpu
 
-# 兩引擎比較
+# 執行 MLX 與 CPU 比較
 bash "$S" "會議.mp4" zh "參與者有 A 與 B" ./out both
 
-# 只有在確認要替換既有輸出時使用；舊資料會保留到備份資料夾
+# 確認要替換既有輸出時使用；舊資料會保留在備份資料夾
 bash "$S" --overwrite "會議.mp4" zh "" ./out cpu
 ```
 
-輸入會先確認檔案存在且可讀。副檔名不在支援清單時會拒絕；有 `ffprobe` 時則會再確認檔案含 `audio` 或 `video` stream。沒有 `ffprobe` 時，支援的副檔名只能提供基本檢查，實際解碼仍由 `ffmpeg` 負責。
+也可以直接在 Claude Code 說：「幫我把這個錄音轉成逐字稿」。
 
-## 引擎與 `both` 語義
+## 指令參數
 
-| 引擎 | 條件 | 結果 |
-|------|------|------|
-| `mlx`（預設） | Apple Silicon | MLX GPU；非 Apple Silicon 或 MLX 準備失敗會明確改跑 CPU |
-| `cpu` | 可用的 Python 環境 | `openai-whisper` CPU |
-| `both` | MLX 與 CPU 都可用 | 兩邊都完成 QC 後才產生比較 |
+既有位置參數順序保持相容：
 
-`both` 如果平台不是 Apple Silicon，或 MLX venv／套件準備失敗，會印出 `comparison cancelled`，只執行 CPU，不會產生假比較表。CPU 成功時退出碼為 `0`；CPU 失敗時為非零，並保留暫存 run directory 的部分輸出供診斷。
+```text
+transcribe.sh [選項] <輸入檔> [語言=zh] [initial_prompt] [輸出資料夾] [引擎=mlx|cpu|both]
+```
 
-## 輸出安全
+| 參數 | 說明 |
+|---|---|
+| `-h`, `--help` | 顯示說明，不初始化任何引擎 |
+| `--overwrite` | 成功後替換既有輸出，舊資料先移至備份資料夾 |
+| `--` | 結束選項解析，允許輸入路徑或 prompt 以 `-` 開頭 |
+| `語言` | Whisper 語言代碼，例如 `zh`、`en`、`ja` |
+| `initial_prompt` | 人名、產品名與領域詞，可降低專有名詞錯字 |
+| `輸出資料夾` | 預設為輸入檔旁的 `transcribe_out/` |
+| `引擎` | `mlx`、`cpu` 或 `both` |
 
-- 轉錄先寫入輸出父資料夾下的 `.transcribe-meeting-run.*` 暫存目錄。
-- 只有輸出格式完整、OpenCC 轉繁成功（預設開啟）與 QC 成功後，才會發布到目標資料夾。
-- 目標資料夾已存在時，預設停止且不修改既有內容。
-- `--overwrite` 會先把整個既有輸出資料夾移到 `.transcribe-meeting-backup.* / previous`，成功後才發布新輸出；不刪除舊資料。
-- 失敗時不清理暫存 run directory，錯誤訊息會給出路徑。
-- 若不想使用 OpenCC，請明確設定 `TO_TRADITIONAL=0`；未明確略過時，OpenCC 無法使用會使本次不發布。
+## 引擎行為
 
-## 依賴隔離與版本
+| 引擎 | 適用情境 | 行為 |
+|---|---|---|
+| `mlx` | Apple Silicon | 使用 MLX GPU；不支援或準備失敗時明確改跑 CPU |
+| `cpu` | 需要相容性或 fallback | 使用 `openai-whisper` CPU |
+| `both` | 驗證 MLX 品質 | 兩邊都完成後才產生比較；MLX 失敗時只跑 CPU 並標示 `comparison cancelled` |
 
-腳本不再在找不到 CPU 引擎時直接 `pip install --user`。它會先重用現有的 `whisper` 指令，否則在快取下建立專用 CPU venv：
+`both` 模式的比較會列出耗時、加速倍數、段數、字數、相似度與實質差異片段。相似度不是正確率保證；出現整段內容差異時，仍要人工聽取原音檔。
 
-`$XDG_CACHE_HOME/transcribe-meeting/`（未設定時通常是 `~/.cache/transcribe-meeting/`）
+## 輸出安全與失敗處理
 
-| 用途 | 預設套件版本 | 預設模型／設定 |
-|------|--------------|----------------|
+1. 先檢查檔案存在、可讀，並在可用時確認 `ffprobe` 找得到 audio/video stream。
+2. 轉錄結果先寫入 `.transcribe-meeting-run.*` 暫存資料夾。
+3. 五種輸出格式、OpenCC 轉繁與品質稽核都通過後，才移至正式輸出資料夾。
+4. 目標資料夾已存在時，預設停止且不修改既有內容。
+5. 使用 `--overwrite` 時，舊輸出會移到 `.transcribe-meeting-backup.*/previous`，不會刪除。
+6. 失敗時會保留暫存資料夾，錯誤訊息會提供診斷路徑。
+
+預設 OpenCC 無法使用時不發布輸出；若確定要保留原始繁簡混合結果，請明確設定：
+
+```bash
+TO_TRADITIONAL=0 bash "$S" "會議.mp4" zh "" ./out cpu
+```
+
+## 依賴與快取
+
+腳本不會把 CPU 依賴直接安裝到 user site。缺少引擎時，會在以下位置建立專用快取環境：
+
+```text
+${XDG_CACHE_HOME:-~/.cache}/transcribe-meeting/
+```
+
+| 用途 | 預設套件版本 | 預設模型或設定 |
+|---|---|---|
 | MLX | `mlx-whisper==0.4.2` | `mlx-community/whisper-large-v3-turbo` |
 | CPU | `openai-whisper==20240930` | `turbo` |
 | 轉繁 | `opencc-python-reimplemented==0.1.7` | `s2tw` |
 
-套件版本與模型可用環境變數覆蓋：`MLX_PACKAGE`、`CPU_PACKAGE`、`OPENCC_PACKAGE`、`MLX_MODEL`、`CPU_MODEL`。固定預設版本是可重現性基準；不同 Python／平台 wheel 不相容時再用環境變數明確調整。
+可用環境變數覆蓋：
 
-套件與模型會在首次需要時下載，可能需要數 GB 磁碟與網路。腳本本身不把音檔上傳到雲端，也不會呼叫雲端轉錄 API；套件索引與模型主機的網路連線不等於音檔外傳。
+```text
+MLX_PACKAGE / CPU_PACKAGE / OPENCC_PACKAGE
+MLX_MODEL / CPU_MODEL
+TO_TRADITIONAL / OPENCC_CONFIG
+TRANSCRIBE_ENGINE
+```
 
-## 限制
+模型與套件可能需要數 GB 磁碟空間。模型下載主機與套件索引會被連線，但腳本不會把音檔送往雲端轉錄服務。
 
-- 需要 `ffmpeg`；MLX 只適用 Apple Silicon。
-- `s2tw` 會將「台灣」正規化為「臺灣」；可用 `OPENCC_CONFIG=s2t` 或 `TO_TRADITIONAL=0` 調整。
-- 聲道檢查只協助判斷是否可能是混音 mono，不做 speaker diarization。混音 mono 的講者歸屬仍需人工依內容判讀。
-- QC 只抓重複迴圈、compression ratio 與少數常見幻覺樣式，不是逐字稿正確性的保證。
-- 速度表現受硬體、模型快取與音檔長度影響。README 早期的實測數字是既有紀錄，本次沒有重跑，不作為新的 benchmark。
+## 品質稽核與限制
 
-## 測試與 CI
+腳本會檢查：
 
-測試只使用 Python 標準庫與假的 `ffmpeg`／`ffprobe`／`whisper`，不需要 Whisper、MLX、ffmpeg、網路或大型媒體：
+- 連續重複句子
+- `compression_ratio > 2.4`
+- 少數常見幻覺文字
+- 逐字稿覆蓋時間與音檔長度差異
+
+這些只是提醒，不是逐字稿正確性的保證。另請注意：
+
+- 不提供 speaker diarization；混音 mono 的講者需要人工依內容判讀。
+- `s2tw` 會把「台灣」正規化為「臺灣」；可改用 `OPENCC_CONFIG=s2t` 或關閉轉繁。
+- 實際速度取決於硬體、模型快取、語言與音檔長度；README 不宣稱未重新驗證的 benchmark。
+
+## 開發與測試
 
 ```bash
 bash -n transcribe.sh
@@ -99,14 +154,23 @@ python3 -m py_compile tests/test_transcribe.py
 git diff --check
 ```
 
-GitHub Actions 會在 push／pull request 執行相同的語法、測試與基本靜態檢查。
+測試使用假的 `ffmpeg`、`ffprobe`、`whisper` 與 OpenCC 模組，不會下載模型或處理真實錄音。
 
-## 移除快取
+GitHub Actions 會在 push 與 pull request 執行語法檢查、離線測試與差異檢查。
 
-確認路徑後再逐一移除；這些命令不會碰輸入檔或已發布輸出：
+## 清理
+
+確認路徑後再執行；以下命令不會碰已發布輸出：
 
 ```bash
 rm -ri ~/.claude/skills/transcribe-meeting
 rm -ri ~/.cache/transcribe-meeting
 rm -ri ~/.cache/whisper
 ```
+
+## 參與貢獻
+
+- [貢獻指南](CONTRIBUTING.md)
+- [安全性政策](SECURITY.md)
+- [變更記錄](CHANGELOG.md)
+- [MIT License](LICENSE)

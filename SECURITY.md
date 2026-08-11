@@ -1,16 +1,28 @@
-# Security Policy
+# 安全性政策
 
-## Supported versions
+## 支援版本
 
-Only the latest version on the `main` branch is actively maintained.
+目前只維護 `main` 分支的最新版本。
 
-## Reporting a vulnerability
+## 回報安全漏洞
 
-Do not open a public issue for a security vulnerability. Email `info@yotron-ai.com` with:
+請不要用公開 Issue 回報安全漏洞，請寄信至 `info@yotron-ai.com`，並提供：
 
-- a short description and impact;
-- reproduction steps or a minimal proof of concept;
-- affected commit or version;
-- any suggested mitigation.
+- 漏洞摘要與可能影響；
+- 可重現步驟或最小化概念驗證；
+- 受影響的 commit 或版本；
+- 建議的緩解方式。
 
-Do not attach real meeting recordings or other sensitive customer data. The script keeps audio local during transcription, but its first-run package and model downloads require network access.
+請不要附上真實會議錄音、逐字稿或其他客戶機密資料；可使用虛構 fixture 重現問題。
+
+## 隱私邊界
+
+轉錄過程中的音檔與逐字稿會留在本機，腳本不呼叫雲端轉錄 API，也不會主動上傳音檔。
+
+但首次使用時，腳本可能連線下載：
+
+- Python 套件；
+- Whisper / MLX 模型；
+- OpenCC 套件。
+
+因此「本機轉錄」代表音檔不上傳，不代表套件與模型下載完全離線。若環境禁止網路，請先在可連線環境準備快取，再於離線環境執行。

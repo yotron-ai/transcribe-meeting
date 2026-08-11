@@ -1,18 +1,23 @@
-## Summary
+## 摘要
 
-<!-- What user-visible behavior changes? -->
+<!-- 請用繁體中文說明使用者看得到的行為變更。 -->
 
-## Verification
+## 變更內容
+
+<!-- 列出主要修改；保留命令、環境變數與套件名稱的原文。 -->
+
+## 驗證結果
 
 ```text
-# Paste exact commands and results.
+# 貼上實際執行的命令與結果。
 ```
 
-## Checklist
+## 檢查清單
 
-- [ ] No recordings, model files, credentials, or generated private transcripts added.
-- [ ] Offline tests updated for output or CLI behavior changes.
-- [ ] README/SKILL updated when usage or limitations changed.
-- [ ] `bash -n transcribe.sh` passes.
-- [ ] `python -m unittest discover -s tests -v` passes.
-- [ ] `git diff --check` passes.
+- [ ] 未加入錄音、模型檔、憑證或客戶逐字稿。
+- [ ] CLI、輸出格式或安全行為變更已有離線測試。
+- [ ] README / SKILL 已同步更新。
+- [ ] 使用者可見文件以繁體中文為主。
+- [ ] `bash -n transcribe.sh` 通過。
+- [ ] `python3 -m unittest discover -s tests -v` 通過。
+- [ ] `git diff --check HEAD` 通過。
