@@ -4,3 +4,9 @@ transcribe_out/
 # 編輯備份
 *.bak
 *.bak-*
+
+# 測試與轉錄暫存
+__pycache__/
+*.pyc
+.transcribe-meeting-run.*
+.transcribe-meeting-backup.*
