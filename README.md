@@ -172,6 +172,8 @@ git diff --check
 
 GitHub Actions 會在 push 與 pull request 執行語法檢查、離線測試與差異檢查。
 
+另有[真實 CPU 轉錄測試](docs/real-cpu-test.md)，使用合成英文語音與 `tiny.en`，檢查首次及快取後的完整流程。測試範圍與實際結果應分開看待；它不代表中文會議、預設 `turbo`、MLX 或 Windows 已通過驗證。
+
 ## 清理
 
 確認路徑後再執行；以下命令不會碰已發布輸出：
