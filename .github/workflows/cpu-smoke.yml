@@ -17,8 +17,8 @@ jobs:
     timeout-minutes: 15
     env:
       CPU_MODEL: tiny.en
-      CPU_VENV: ${{ runner.temp }}/transcribe-smoke/cpu-venv
-      XDG_CACHE_HOME: ${{ runner.temp }}/transcribe-smoke/cache
+      CPU_VENV: /tmp/transcribe-smoke/cpu-venv
+      XDG_CACHE_HOME: /tmp/transcribe-smoke/cache
       LC_ALL: C.UTF-8
       OMP_NUM_THREADS: "2"
       MKL_NUM_THREADS: "2"
