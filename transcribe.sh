@@ -156,7 +156,7 @@ CACHE_ROOT="${XDG_CACHE_HOME:-${HOME}/.cache}/transcribe-meeting"
 MLX_VENV="${MLX_VENV:-${CACHE_ROOT}/mlx-venv}"
 CPU_VENV="${CPU_VENV:-${CACHE_ROOT}/cpu-venv}"
 MLX_PACKAGE="${MLX_PACKAGE:-mlx-whisper==0.4.2}"
-CPU_PACKAGE="${CPU_PACKAGE:-openai-whisper==20240930}"
+CPU_PACKAGE="${CPU_PACKAGE:-openai-whisper==20250625}"
 OPENCC_PACKAGE="${OPENCC_PACKAGE:-opencc-python-reimplemented==0.1.7}"
 # 轉繁：Whisper 兩個引擎都會漏簡體字（實測 0.5–3%，跟段落內容有關），
 # 統一轉繁後 mlx/cpu 的逐字稿相似度會跳升約 5 個百分點——

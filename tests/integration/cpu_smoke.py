@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import importlib.metadata
 import json
 import os
 from pathlib import Path
@@ -73,6 +72,8 @@ def main() -> None:
             run = {"label": label, "command": command, "exit_code": result.returncode, "wall_seconds": round(elapsed, 3)}
             report["runs"].append(run)
             if result.returncode:
+                print(result.stdout, flush=True)
+                print(result.stderr, file=sys.stderr, flush=True)
                 raise RuntimeError(f"{label}: CLI failed with {result.returncode}; see saved logs")
             stem = audio.stem
             files = [output / f"{stem}.{suffix}" for suffix in ("txt", "srt", "vtt", "json", "tsv")]

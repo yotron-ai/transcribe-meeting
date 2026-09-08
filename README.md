@@ -130,7 +130,7 @@ ${XDG_CACHE_HOME:-~/.cache}/transcribe-meeting/
 | 用途 | 預設套件版本 | 預設模型或設定 |
 |---|---|---|
 | MLX | `mlx-whisper==0.4.2` | `mlx-community/whisper-large-v3-turbo` |
-| CPU | `openai-whisper==20240930` | `turbo` |
+| CPU | `openai-whisper==20250625` | `turbo` |
 | 轉繁 | `opencc-python-reimplemented==0.1.7` | `s2tw` |
 
 可用環境變數覆蓋：
