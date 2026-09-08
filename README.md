@@ -130,7 +130,7 @@ ${XDG_CACHE_HOME:-~/.cache}/transcribe-meeting/
 | 用途 | 預設套件版本 | 預設模型或設定 |
 |---|---|---|
 | MLX | `mlx-whisper==0.4.2` | `mlx-community/whisper-large-v3-turbo` |
-| CPU | `openai-whisper==20240930` | `turbo` |
+| CPU | `openai-whisper==20250625` | `turbo` |
 | 轉繁 | `opencc-python-reimplemented==0.1.7` | `s2tw` |
 
 可用環境變數覆蓋：
@@ -171,6 +171,8 @@ git diff --check
 測試使用假的 `ffmpeg`、`ffprobe`、`whisper` 與 OpenCC 模組，不會下載模型或處理真實錄音。
 
 GitHub Actions 會在 push 與 pull request 執行語法檢查、離線測試與差異檢查。
+
+另有[真實 CPU 轉錄測試](docs/real-cpu-test.md)，使用合成英文語音與 `tiny.en`，檢查首次及快取後的完整流程。測試範圍與實際結果應分開看待；它不代表中文會議、預設 `turbo`、MLX 或 Windows 已通過驗證。
 
 ## 清理
 

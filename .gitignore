@@ -1,5 +1,6 @@
 .DS_Store
 transcribe_out/
+smoke-evidence/
 
 # 編輯備份
 *.bak
