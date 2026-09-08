@@ -155,6 +155,45 @@ class TranscribeCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("ffprobe 無法讀取輸入檔", result.stderr)
 
+    def test_media_without_audio_is_rejected_before_runtime_setup(self) -> None:
+        tools = self.make_fake_tools()
+        input_path = self.write_input("silent-video.mp4")
+        output_path = self.root / "out"
+        for streams in ("video", "subtitle", ""):
+            with self.subTest(streams=streams):
+                self.write_executable(
+                    tools / "ffprobe",
+                    "#!/bin/sh\nprintf '%s\\n' '" + streams + "'\n",
+                )
+                result = self.run_script(
+                    str(input_path), "zh", "", str(output_path), "cpu",
+                    environment=self.environment_for(tools, TO_TRADITIONAL="0"),
+                )
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn("沒有音訊軌", result.stderr)
+                self.assertFalse(output_path.exists())
+                self.assertFalse((self.root / "cache").exists())
+                self.assertFalse(list(self.root.glob(".transcribe-meeting-run.*")))
+
+    def test_video_with_audio_can_be_transcribed(self) -> None:
+        tools = self.make_fake_tools()
+        self.write_executable(
+            tools / "ffprobe",
+            "#!/bin/sh\n"
+            "case \"$*\" in\n"
+            "  *format=duration*) printf '1.0\\n' ;;\n"
+            "  *) printf 'video\\naudio\\n' ;;\n"
+            "esac\n",
+        )
+        input_path = self.write_input("meeting.mp4")
+        output_path = self.root / "out"
+        result = self.run_script(
+            str(input_path), "zh", "", str(output_path), "cpu",
+            environment=self.environment_for(tools, TO_TRADITIONAL="0"),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((output_path / "meeting.txt").is_file())
+
     def test_output_conversion_and_qc_publish_only_after_success(self) -> None:
         tools = self.make_fake_tools()
         opencc = self.make_fake_opencc()
