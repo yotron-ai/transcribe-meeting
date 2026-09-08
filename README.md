@@ -27,7 +27,21 @@ brew install ffmpeg
 
 需要 Python 3.10–3.13；安裝 `uv` 可加快建立虛擬環境，但不是必要條件。
 
-### 2. 安裝 Claude Code Skill
+### 2. 下載與驗證安裝
+
+可以直接用 CLI，不需要先安裝 Claude Code：
+
+```bash
+git clone https://github.com/yotron-ai/transcribe-meeting.git
+cd transcribe-meeting
+bash transcribe.sh --help
+```
+
+`--help` 不會下載模型，也不會開始轉錄。第一次實際試用建議使用自己錄製的短音檔；先確認輸出符合需求，再處理長會議。
+
+目前安裝流程以 macOS 與具備 Bash、Python 3.10–3.13、ffmpeg 的 Linux 環境為主。Windows 原生 PowerShell 與 Git Bash 尚未完成完整轉錄驗證；不要把安裝成功或 `--help` 通過當成引擎相容性保證。
+
+### 3. 安裝 Claude Code Skill（選用）
 
 將整個 repo 複製到以下其中一個位置：
 
@@ -36,13 +50,13 @@ brew install ffmpeg
 專案共用：<專案>/.claude/skills/transcribe-meeting/
 ```
 
-### 3. 先查看 CLI 說明
+### 4. 先查看 CLI 說明
 
 ```bash
 bash transcribe.sh --help
 ```
 
-### 4. 執行轉錄
+### 5. 執行轉錄
 
 ```bash
 S=~/.claude/skills/transcribe-meeting/transcribe.sh
@@ -92,7 +106,7 @@ transcribe.sh [選項] <輸入檔> [語言=zh] [initial_prompt] [輸出資料夾
 
 ## 輸出安全與失敗處理
 
-1. 先檢查檔案存在、可讀，並在可用時確認 `ffprobe` 找得到 audio/video stream。
+1. 先檢查檔案存在、可讀，並在 `ffprobe` 可用時確認至少有一條音訊軌。只有畫面或字幕的影片會在準備引擎前停止；這項檢查不判定音軌是否靜音。
 2. 轉錄結果先寫入 `.transcribe-meeting-run.*` 暫存資料夾。
 3. 五種輸出格式、OpenCC 轉繁與品質稽核都通過後，才移至正式輸出資料夾。
 4. 目標資料夾已存在時，預設停止且不修改既有內容。
@@ -169,6 +183,8 @@ rm -ri ~/.cache/whisper
 ```
 
 ## 參與貢獻
+
+第一次使用可參考[試用與回饋指南](docs/first-run.md)。如果已成功使用，也歡迎透過 [使用回饋](https://github.com/yotron-ai/transcribe-meeting/issues/new?template=usage_feedback.yml) 告訴我們使用平台、用途與卡住的步驟；不需要提供錄音或逐字稿。
 
 - [貢獻指南](CONTRIBUTING.md)
 - [安全性政策](SECURITY.md)

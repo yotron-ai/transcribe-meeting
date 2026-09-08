@@ -35,7 +35,7 @@ print_help() {
     '' \
     '說明:' \
     '  既有 positional 參數順序保持不變。輸入會先做副檔名檢查；有 ffprobe 時' \
-    '  也會確認檔案含 audio/video stream。輸出先寫入暫存 run directory，完成' \
+    '  也會確認檔案含音訊軌（只有畫面的影片無法轉錄）。輸出先寫入暫存資料夾，完成' \
     '  輸出檢查、轉繁與品質稽核後才發布。' \
     '  音檔與逐字稿留在本機；首次使用仍會下載 Python 套件與模型。' \
     '' \
@@ -136,9 +136,9 @@ validate_input() {
       return 1
     fi
     case "${streams}" in
-      *audio*|*video*) ;;
+      *audio*) ;;
       *)
-        echo "輸入檔不是可辨識的媒體檔（沒有 audio/video stream）: ${INPUT}" >&2
+        echo "輸入檔沒有音訊軌，無法轉錄；請提供包含聲音的錄音或影片: ${INPUT}" >&2
         return 1
         ;;
     esac

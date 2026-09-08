@@ -1,0 +1,36 @@
+name: 使用回饋
+description: 分享試用結果、實際用途與安裝障礙，不需要上傳音檔
+title: "[使用回饋] "
+body:
+  - type: markdown
+    attributes:
+      value: "這是公開 Issue。請勿提供錄音、逐字稿、客戶資料、私人路徑或金鑰。成功與失敗的回饋都歡迎。"
+  - type: input
+    id: environment
+    attributes:
+      label: 作業系統、硬體、Python 與專案版本
+      description: "版本可用 git rev-parse --short HEAD 查詢；不知道的欄位可註明未知。"
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: 試用結果
+      options:
+        - 成功產生輸出
+        - 安裝或轉錄失敗
+        - 尚未完成試用
+    validations:
+      required: true
+  - type: textarea
+    id: use_case
+    attributes:
+      label: 想解決什麼問題？
+      description: "只需要一般用途，例如課程字幕；不必提供公司或客戶名稱。"
+    validations:
+      required: true
+  - type: textarea
+    id: experience
+    attributes:
+      label: 哪些步驟有幫助，哪些地方卡住？
+      description: "可附去識別化的錯誤摘要。效能數字請附音檔長度、引擎與是否首次下載。"
