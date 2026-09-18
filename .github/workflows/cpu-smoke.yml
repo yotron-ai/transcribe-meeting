@@ -23,8 +23,8 @@ jobs:
       OMP_NUM_THREADS: "2"
       MKL_NUM_THREADS: "2"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install synthetic speech and media tools
@@ -39,7 +39,7 @@ jobs:
         run: python tests/integration/cpu_smoke.py --output "$RUNNER_TEMP/transcribe-smoke/evidence"
       - name: Preserve synthetic test evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: real-cpu-transcription-${{ github.sha }}
           path: ${{ runner.temp }}/transcribe-smoke/evidence
